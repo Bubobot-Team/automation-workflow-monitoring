@@ -10,24 +10,24 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        -1300,
-        360
+        -480,
+        200
       ],
-      "id": "b0e6095e-b162-4569-945a-38c3e7c02ecb",
+      "id": "748d95dd-6473-46a8-8fd6-412c68335f88",
       "name": "Webhook",
       "webhookId": "b2d81982-2ab3-477a-af44-730ae2660d24"
     },
     {
       "parameters": {
-        "jsCode": "const alerts = items[0].json.body.alerts || [];\nreturn alerts.map(alert => ({\n  const startsAt = new Date(alert.startsAt);\n  const endsAt = new Date(alert.endsAt);\n  const hour = endsAt.getUTCHours();\n  const isBusinessHours = hour >= 9 && hour < 17; // 9 AM–5 PM UTC\n  const durationMinutes = (endsAt - startsAt) / 1000 / 60; // Duration in minutes\n  json: {\n    status: alert.status, // firing or resolved\n    alertname: alert.labels.alertname, // e.g., HighCPU\n    severity: alert.labels.severity, // e.g., critical\n    instance: alert.labels.instance, // e.g., 47.129.163.27:9100\n    service: alert.labels.service, // e.g., node\n    description: alert.annotations.description, // e.g., CPU usage description\n    startsAt: alert.startsAt, // e.g., 2025-05-25T06:40:29.682Z\n    endsAt: alert.endsAt, // e.g., 2025-05-25T06:42:59.682Z\n    fingerprint: alert.fingerprint, // e.g., 80e7d055dbb50b48\n    isBusinessHours: isBusinessHours, // true if within 9 AM–5 PM UTC\n    durationMinutes: durationMinutes // Duration in minutes\n  }\n}));"
+        "jsCode": "const alerts = items[0].json.body.alerts || [];\nreturn alerts.map(alert => {\n  const startsAt = new Date(alert.startsAt);\n  const endsAt = new Date(alert.endsAt);\n  const hour = endsAt.getUTCHours();\n  const isBusinessHours = hour >= 9 && hour < 17; // 9 AM–5 PM UTC\n  const durationMinutes = (endsAt - startsAt) / 1000 / 60; // Duration in minutes\n  return {\n    json: {\n      status: alert.status, // firing or resolved\n      alertname: alert.labels.alertname, // e.g., HighCPU\n      severity: alert.labels.severity, // e.g., critical\n      instance: alert.labels.instance, // e.g., 47.129.163.27:9100\n      service: alert.labels.service, // e.g., node\n      description: alert.annotations.description, // e.g., CPU usage description\n      startsAt: alert.startsAt, // e.g., 2025-05-25T06:40:29.682Z\n      endsAt: alert.endsAt, // e.g., 2025-05-25T06:42:59.682Z\n      fingerprint: alert.fingerprint, // e.g., 80e7d055dbb50b48\n      isBusinessHours: isBusinessHours, // true if within 9 AM–5 PM UTC\n      durationMinutes: durationMinutes // Duration in minutes\n    }\n  };\n});"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1080,
-        360
+        -200,
+        200
       ],
-      "id": "41b3a8ca-dd2d-47a4-ac62-04eda1858c8e",
+      "id": "b6657ad3-7076-4f22-90fc-13a2894433d1",
       "name": "Code"
     },
     {
@@ -46,80 +46,11 @@
       "type": "n8n-nodes-base.pagerDuty",
       "typeVersion": 1,
       "position": [
-        -480,
-        300
+        380,
+        420
       ],
-      "id": "e1d59b40-d7f4-450c-997f-d247411deccb",
+      "id": "eb06392a-96e6-461a-876d-5e7f30d0be19",
       "name": "PagerDuty"
-    },
-    {
-      "parameters": {
-        "resource": "databasePage",
-        "databaseId": {
-          "__rl": true,
-          "value": "1fe12359-20f8-805b-9f1f-d72cc46aa2a7",
-          "mode": "list",
-          "cachedResultName": "Incidents",
-          "cachedResultUrl": "https://www.notion.so/1fe1235920f8805b9f1fd72cc46aa2a7"
-        },
-        "title": "New incident",
-        "propertiesUi": {
-          "propertyValues": [
-            {
-              "key": "Alert Name|title",
-              "title": "={{ $node[\"Code\"].json[\"alertname\"] }}"
-            },
-            {
-              "key": "Severity|select",
-              "selectValue": "={{ $node[\"Code\"].json[\"severity\"] }}"
-            },
-            {
-              "key": "Instance|rich_text",
-              "textContent": "={{ $node[\"Code\"].json[\"instance\"] }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "80551a56-ec63-4606-ae3d-33d3f22d246c",
-      "name": "Update notion - Set to Outline Ready",
-      "type": "n8n-nodes-base.notion",
-      "position": [
-        -460,
-        560
-      ],
-      "typeVersion": 2.2,
-      "alwaysOutputData": true
-    },
-    {
-      "parameters": {
-        "resource": "message",
-        "guildId": {
-          "__rl": true,
-          "value": "1254730427805990942",
-          "mode": "list",
-          "cachedResultName": "b0ld8",
-          "cachedResultUrl": "https://discord.com/channels/1254730427805990942"
-        },
-        "channelId": {
-          "__rl": true,
-          "value": "1254730427805990945",
-          "mode": "list",
-          "cachedResultName": "general",
-          "cachedResultUrl": "https://discord.com/channels/1254730427805990942/1254730427805990945"
-        },
-        "content": "=New incident in\nInstance: {{ $node[\"Code\"].json[\"instance\"] }}\nSeverity: {{ $node[\"Code\"].json[\"severity\"] }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.discord",
-      "typeVersion": 2,
-      "position": [
-        -480,
-        120
-      ],
-      "id": "8f0d4231-6329-4aa9-98b9-08ba0990a63a",
-      "name": "Discord1",
-      "webhookId": "6e1014b5-d89d-4939-a1f3-b74c280ae73b"
     },
     {
       "parameters": {
@@ -158,11 +89,162 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -780,
+        -20,
         200
       ],
-      "id": "558cf34a-b6e3-4c11-a7db-e8b38819c229",
+      "id": "c0e962bc-6d44-4986-bae0-c06a3160a9bf",
       "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "guildId": {
+          "__rl": true,
+          "value": "1254730427805990942",
+          "mode": "list",
+          "cachedResultName": "b0ld8",
+          "cachedResultUrl": "https://discord.com/channels/1254730427805990942"
+        },
+        "channelId": {
+          "__rl": true,
+          "value": "1254730427805990945",
+          "mode": "list",
+          "cachedResultName": "general",
+          "cachedResultUrl": "https://discord.com/channels/1254730427805990942/1254730427805990945"
+        },
+        "content": "=New incident in\nInstance: {{ $node[\"Code\"].json[\"instance\"] }}\nSeverity: {{ $node[\"Code\"].json[\"severity\"] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        380,
+        260
+      ],
+      "id": "fb1475c1-8180-4c56-837d-e55402c0d52d",
+      "name": "Discord",
+      "webhookId": "6e1014b5-d89d-4939-a1f3-b74c280ae73b"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "1fe12359-20f8-805b-9f1f-d72cc46aa2a7",
+          "mode": "list",
+          "cachedResultName": "Incidents",
+          "cachedResultUrl": "https://www.notion.so/1fe1235920f8805b9f1fd72cc46aa2a7"
+        },
+        "title": "New incident",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Alert Name|title",
+              "title": "={{ $node[\"Code\"].json[\"alertname\"] }}"
+            },
+            {
+              "key": "Severity|select",
+              "selectValue": "={{ $node[\"Code\"].json[\"severity\"] }}"
+            },
+            {
+              "key": "Instance|rich_text",
+              "textContent": "={{ $node[\"Code\"].json[\"instance\"] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f06e1d51-b76c-4568-909b-a4cc021ec980",
+      "name": "Update notion - Log incidents",
+      "type": "n8n-nodes-base.notion",
+      "position": [
+        380,
+        600
+      ],
+      "typeVersion": 2.2,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "content": "# Analyze",
+        "height": 680,
+        "width": 467,
+        "color": 4
+      },
+      "id": "e2d42105-4ac1-464c-8457-dde1a4639d7a",
+      "name": "Sticky Note23",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -300,
+        120
+      ],
+      "typeVersion": 1,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "# Routing alert",
+        "height": 680,
+        "width": 467,
+        "color": 3
+      },
+      "id": "1c4d0d4d-2f49-41b3-add6-452dbe5d9a3f",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        180,
+        120
+      ],
+      "typeVersion": 1,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "# Automate Resolve",
+        "height": 680,
+        "width": 347,
+        "color": 3
+      },
+      "id": "75642d3f-21f1-4cac-a1eb-adec49a14204",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        660,
+        120
+      ],
+      "typeVersion": 1,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "# Receive data",
+        "height": 680,
+        "width": 287,
+        "color": 4
+      },
+      "id": "5d3a375d-e2f2-443b-a30d-7c139a9c1921",
+      "name": "Sticky Note24",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -600,
+        120
+      ],
+      "typeVersion": 1,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "function": "arn:aws:lambda:ap-southeast-1:476114155338:function:AutomateServiceRestart",
+        "payload": "{\"action\": \"restart\"}"
+      },
+      "type": "n8n-nodes-base.awsLambda",
+      "typeVersion": 1,
+      "position": [
+        780,
+        420
+      ],
+      "id": "e518bfb2-8b91-4d2f-9d2f-4b9da81a1fe1",
+      "name": "AWS Lambda - Scale/restart services"
     }
   ],
   "pinData": {},
@@ -182,12 +264,23 @@
       "main": [
         [
           {
-            "node": "If",
+            "node": "Update notion - Log incidents",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Update notion - Set to Outline Ready",
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PagerDuty": {
+      "main": [
+        [
+          {
+            "node": "AWS Lambda - Scale/restart services",
             "type": "main",
             "index": 0
           }
@@ -198,7 +291,7 @@
       "main": [
         [
           {
-            "node": "Discord1",
+            "node": "Discord",
             "type": "main",
             "index": 0
           }
@@ -217,7 +310,7 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "1340a3a7-740a-4f40-a8d0-dacf0aef3b14",
+  "versionId": "78fc58b9-a0d9-4a92-8d20-67f92891429a",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "f21646e9824644bcc28ab48f4fbefcc86cd9556879c6164b59093857dd69987a"
