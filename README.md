@@ -12,6 +12,14 @@ This repository contains example n8n workflows that DevOps teams can use to enha
     - Discord notifications for team awareness
     - Business hours detection for appropriate routing
 
+- AWS Service Management - [n8n - AWS Service Management](./n8n/n8n___AWS_Service_Management.json)
+  - A workflow that automates AWS service management through Lambda functions
+  - Features:
+    - Automatic service restart capabilities
+    - Dynamic service scaling based on conditions
+    - Integration with AWS Lambda for serverless execution
+    - Secure AWS service management through IAM roles
+
 ## Contact & Community
 
 - Email us at support@bubobot.com
