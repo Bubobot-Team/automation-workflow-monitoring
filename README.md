@@ -1,6 +1,6 @@
-# n8n-integrate-monitoring
+# automation-workflow-monitoring
 
-This repository contains example n8n workflows that DevOps teams can use to enhance their monitoring and automation processes. These workflows demonstrate best practices for integrating various monitoring tools and services.
+This repository contains example automation workflows that DevOps teams can use to enhance their monitoring and automation processes. These workflows demonstrate best practices for integrating various monitoring tools and services.
 
 ## Author
 
