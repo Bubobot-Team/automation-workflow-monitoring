@@ -10,10 +10,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        -480,
-        200
+        40,
+        360
       ],
-      "id": "748d95dd-6473-46a8-8fd6-412c68335f88",
+      "id": "21143c74-8a95-43b8-af34-f543d5346304",
       "name": "Webhook",
       "webhookId": "b2d81982-2ab3-477a-af44-730ae2660d24"
     },
@@ -24,10 +24,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -200,
-        200
+        400,
+        220
       ],
-      "id": "b6657ad3-7076-4f22-90fc-13a2894433d1",
+      "id": "ebb9ff22-e46b-45ed-b001-a9eb9d0127a3",
       "name": "Code"
     },
     {
@@ -35,7 +35,7 @@
         "authentication": "apiToken",
         "resource": "incident",
         "operation": "create",
-        "title": "=New incident for{{ $node[\"Code\"].json[\"instance\"] }}",
+        "title": "=New incident for {{ $node[\"Code\"].json[\"instance\"] }}",
         "serviceId": "P24W65G",
         "email": "dev@bubobot.com",
         "additionalFields": {
@@ -46,11 +46,161 @@
       "type": "n8n-nodes-base.pagerDuty",
       "typeVersion": 1,
       "position": [
-        380,
-        420
+        840,
+        640
       ],
-      "id": "eb06392a-96e6-461a-876d-5e7f30d0be19",
+      "id": "47c16582-b5c5-440a-a489-945c88b93bd9",
       "name": "PagerDuty"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "guildId": {
+          "__rl": true,
+          "value": "1254730427805990942",
+          "mode": "list",
+          "cachedResultName": "b0ld8",
+          "cachedResultUrl": "https://discord.com/channels/1254730427805990942"
+        },
+        "channelId": {
+          "__rl": true,
+          "value": "1254730427805990945",
+          "mode": "list",
+          "cachedResultName": "general",
+          "cachedResultUrl": "https://discord.com/channels/1254730427805990942/1254730427805990945"
+        },
+        "content": "=New incident in\nInstance: {{ $node[\"Code\"].json[\"instance\"] }}\nSeverity: {{ $node[\"Code\"].json[\"severity\"] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        840,
+        460
+      ],
+      "id": "a7b07af4-30b4-4097-9ad7-f440de6e5ce5",
+      "name": "Discord",
+      "webhookId": "6e1014b5-d89d-4939-a1f3-b74c280ae73b"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "1fe12359-20f8-805b-9f1f-d72cc46aa2a7",
+          "mode": "list",
+          "cachedResultName": "Incidents",
+          "cachedResultUrl": "https://www.notion.so/1fe1235920f8805b9f1fd72cc46aa2a7"
+        },
+        "title": "New incident",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Alert Name|title",
+              "title": "={{ $node[\"Code\"].json[\"alertname\"] }}"
+            },
+            {
+              "key": "Severity|select",
+              "selectValue": "={{ $node[\"Code\"].json[\"severity\"] }}"
+            },
+            {
+              "key": "Instance|rich_text",
+              "textContent": "={{ $node[\"Code\"].json[\"instance\"] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "71a0680d-9f88-45bc-9838-c40098417245",
+      "name": "Update notion - Log incidents",
+      "type": "n8n-nodes-base.notion",
+      "position": [
+        1440,
+        580
+      ],
+      "typeVersion": 2.2,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "content": "# Detection & Analysis",
+        "height": 800,
+        "width": 367,
+        "color": 4
+      },
+      "id": "f8556a0a-01f3-4dd4-b84b-e3ef690d51d4",
+      "name": "Sticky Note23",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        340,
+        0
+      ],
+      "typeVersion": 1,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "# Route incident alerts",
+        "height": 800,
+        "width": 467,
+        "color": 3
+      },
+      "id": "3734efdd-d8e7-4213-ab9b-b4ec09a66809",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        720,
+        0
+      ],
+      "typeVersion": 1,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "# Recovery",
+        "height": 420,
+        "width": 667,
+        "color": 3
+      },
+      "id": "9eecd67c-21af-436e-974d-a042e14ffc3b",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1200,
+        0
+      ],
+      "typeVersion": 1,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "# Preparation (Receive metrics from Prometheus)",
+        "height": 800,
+        "width": 327
+      },
+      "id": "38a4a252-0be6-4313-b789-fabb03fe2797",
+      "name": "Sticky Note24",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "function": "arn:aws:lambda:ap-southeast-1:476114155338:function:AutomateServiceRestart",
+        "payload": "={\n    \"shouldAutoResolve\": \"{{ $node[\"Code - Format AI agent result\"].json[\"shouldAutoResolve\"] }}\",\n    \"reason\": \"{{ $node[\"Code - Format AI agent result\"].json[\"reason\"] }}\"\n  }"
+      },
+      "type": "n8n-nodes-base.awsLambda",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        120
+      ],
+      "id": "390d756b-1621-483b-8f93-7ce4c5e0a04e",
+      "name": "AWS Lambda - Scale/restart services"
     },
     {
       "parameters": {
@@ -89,162 +239,74 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -20,
-        200
+        540,
+        520
       ],
-      "id": "c0e962bc-6d44-4986-bae0-c06a3160a9bf",
-      "name": "If"
+      "id": "c9ff1d10-0c1c-48f7-a89c-89acee89f622",
+      "name": "If - Minor issues or Critical?"
     },
     {
       "parameters": {
-        "resource": "message",
-        "guildId": {
-          "__rl": true,
-          "value": "1254730427805990942",
-          "mode": "list",
-          "cachedResultName": "b0ld8",
-          "cachedResultUrl": "https://discord.com/channels/1254730427805990942"
-        },
-        "channelId": {
-          "__rl": true,
-          "value": "1254730427805990945",
-          "mode": "list",
-          "cachedResultName": "general",
-          "cachedResultUrl": "https://discord.com/channels/1254730427805990942/1254730427805990945"
-        },
-        "content": "=New incident in\nInstance: {{ $node[\"Code\"].json[\"instance\"] }}\nSeverity: {{ $node[\"Code\"].json[\"severity\"] }}",
+        "promptType": "define",
+        "text": "=Analyze the following Prometheus alert to determine if it should be auto-resolved by restarting the EC2 instance to handle issues like high CPU usage, especially when the team is unavailable. The context is:\n\n- Alert Name: {{ $node[\"Code\"].json[\"alertname\"] }}\n- Severity: {{ $node[\"Code\"].json[\"severity\"] }}\n- Duration: {{ $node[\"Code\"].json.durationMinutes }} minutes\n- Business Hours: {{ $node[\"Code\"].json[\"isBusinessHours\"] }} (true if 9 AM–5 PM UTC, false otherwise)\n- Description: {{ $node[\"Code\"].json[\"description\"] }}\n\nExtract the CPU usage (X%) from the description, formatted as: \"On <instance> at <alertname>: CPU usage is X%, Memory available is Y%, Swap usage is Z%, Disk I/O is A s, Network received is B MB/s, Latency is C s\".\n\nDecide to auto-resolve (restart the EC2 instance) if:\n1. CPU usage > 80% AND outside business hours (isBusinessHours is false).\n2. CPU usage > 90% AND duration < 5 minutes.\n3. Severity is \"critical\" AND outside business hours (isBusinessHours is false).\n\nReturn only the following JSON object, with no additional text, explanations, or markdown:\n{\n  \"shouldAutoResolve\": boolean,\n  \"reason\": \"Explanation of the reason why this action should or should not be auto-resolved, referencing CPU usage, duration, severity, and business hours if relevant.\"\n}\n\n- If shouldAutoResolve is true, a Lambda function will be triggered to restart the EC2 instance.\n- If shouldAutoResolve is false, no restart will occur.\n- Keep the reason concise and clear, referencing the specific criteria met or not met.\n- If CPU usage cannot be extracted, assume 0% and include it in the reason.",
         "options": {}
       },
-      "type": "n8n-nodes-base.discord",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        1060,
+        120
+      ],
+      "id": "c7e41264-348f-4a3d-ac95-edcbff7665a6",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1080,
+        280
+      ],
+      "id": "39ff06de-be16-4408-b2e1-ebdccf5a236a",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "content": "# Post-incident Activity",
+        "height": 360,
+        "width": 667,
+        "color": 6
+      },
+      "id": "9ac35e32-e7e0-4d52-9887-254db3808aec",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1200,
+        440
+      ],
+      "typeVersion": 1,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const aiOutput = items[0].json;\n\nif (!aiOutput.output) {\n  throw new Error(\"Missing output field in AI Agent response\");\n}\n\nlet parsedOutput;\ntry {\n  // Parse the stringified JSON in output\n  parsedOutput = JSON.parse(aiOutput.output.replace(/\\n\\s*/g, \"\").trim());\n} catch (error) {\n  throw new Error(`Failed to parse AI Agent output: ${error.message}`);\n}\n\n// Validate fields\nif (typeof parsedOutput.shouldAutoResolve !== \"boolean\" || typeof parsedOutput.reason !== \"string\") {\n  throw new Error(\n    `Invalid AI Agent output: shouldAutoResolve must be boolean (received ${typeof parsedOutput.shouldAutoResolve}), reason must be string (received ${typeof parsedOutput.reason})`\n  );\n}\n\n// Return formatted JSON\nreturn [\n  {\n    json: {\n      shouldAutoResolve: parsedOutput.shouldAutoResolve,\n      reason: parsedOutput.reason\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        380,
-        260
-      ],
-      "id": "fb1475c1-8180-4c56-837d-e55402c0d52d",
-      "name": "Discord",
-      "webhookId": "6e1014b5-d89d-4939-a1f3-b74c280ae73b"
-    },
-    {
-      "parameters": {
-        "resource": "databasePage",
-        "databaseId": {
-          "__rl": true,
-          "value": "1fe12359-20f8-805b-9f1f-d72cc46aa2a7",
-          "mode": "list",
-          "cachedResultName": "Incidents",
-          "cachedResultUrl": "https://www.notion.so/1fe1235920f8805b9f1fd72cc46aa2a7"
-        },
-        "title": "New incident",
-        "propertiesUi": {
-          "propertyValues": [
-            {
-              "key": "Alert Name|title",
-              "title": "={{ $node[\"Code\"].json[\"alertname\"] }}"
-            },
-            {
-              "key": "Severity|select",
-              "selectValue": "={{ $node[\"Code\"].json[\"severity\"] }}"
-            },
-            {
-              "key": "Instance|rich_text",
-              "textContent": "={{ $node[\"Code\"].json[\"instance\"] }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "f06e1d51-b76c-4568-909b-a4cc021ec980",
-      "name": "Update notion - Log incidents",
-      "type": "n8n-nodes-base.notion",
-      "position": [
-        380,
-        600
-      ],
-      "typeVersion": 2.2,
-      "alwaysOutputData": true
-    },
-    {
-      "parameters": {
-        "content": "# Analyze",
-        "height": 680,
-        "width": 467,
-        "color": 4
-      },
-      "id": "e2d42105-4ac1-464c-8457-dde1a4639d7a",
-      "name": "Sticky Note23",
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        -300,
+        1440,
         120
       ],
-      "typeVersion": 1,
-      "disabled": true
-    },
-    {
-      "parameters": {
-        "content": "# Routing alert",
-        "height": 680,
-        "width": 467,
-        "color": 3
-      },
-      "id": "1c4d0d4d-2f49-41b3-add6-452dbe5d9a3f",
-      "name": "Sticky Note",
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        180,
-        120
-      ],
-      "typeVersion": 1,
-      "disabled": true
-    },
-    {
-      "parameters": {
-        "content": "# Automate Resolve",
-        "height": 680,
-        "width": 347,
-        "color": 3
-      },
-      "id": "75642d3f-21f1-4cac-a1eb-adec49a14204",
-      "name": "Sticky Note1",
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        660,
-        120
-      ],
-      "typeVersion": 1,
-      "disabled": true
-    },
-    {
-      "parameters": {
-        "content": "# Receive data",
-        "height": 680,
-        "width": 287,
-        "color": 4
-      },
-      "id": "5d3a375d-e2f2-443b-a30d-7c139a9c1921",
-      "name": "Sticky Note24",
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        -600,
-        120
-      ],
-      "typeVersion": 1,
-      "disabled": true
-    },
-    {
-      "parameters": {
-        "function": "arn:aws:lambda:ap-southeast-1:476114155338:function:AutomateServiceRestart",
-        "payload": "{\"action\": \"restart\"}"
-      },
-      "type": "n8n-nodes-base.awsLambda",
-      "typeVersion": 1,
-      "position": [
-        780,
-        420
-      ],
-      "id": "e518bfb2-8b91-4d2f-9d2f-4b9da81a1fe1",
-      "name": "AWS Lambda - Scale/restart services"
+      "id": "afd7e3a5-a857-47c8-b226-90368dff2951",
+      "name": "Code - Format AI agent result"
     }
   ],
   "pinData": {},
@@ -269,7 +331,7 @@
             "index": 0
           },
           {
-            "node": "If",
+            "node": "If - Minor issues or Critical?",
             "type": "main",
             "index": 0
           }
@@ -280,14 +342,14 @@
       "main": [
         [
           {
-            "node": "AWS Lambda - Scale/restart services",
+            "node": "AI Agent",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "If": {
+    "If - Minor issues or Critical?": {
       "main": [
         [
           {
@@ -304,13 +366,46 @@
           }
         ]
       ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code - Format AI agent result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Format AI agent result": {
+      "main": [
+        [
+          {
+            "node": "AWS Lambda - Scale/restart services",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "78fc58b9-a0d9-4a92-8d20-67f92891429a",
+  "versionId": "aca75669-3fb7-43fa-b95f-b5bde788af5d",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "f21646e9824644bcc28ab48f4fbefcc86cd9556879c6164b59093857dd69987a"
