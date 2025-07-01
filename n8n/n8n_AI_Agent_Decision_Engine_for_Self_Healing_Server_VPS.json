@@ -1,0 +1,493 @@
+{
+  "name": "n8n - Sysadmin -2 - Self-Healing for VPS",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "alertmanager",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -40,
+        280
+      ],
+      "id": "03d140f2-2fd1-4cf9-8b58-3f27db87fccd",
+      "name": "Webhook",
+      "webhookId": "b2d81982-2ab3-477a-af44-730ae2660d24"
+    },
+    {
+      "parameters": {
+        "jsCode": "const alerts = items[0].json.body.alerts || [];\nreturn alerts.map(alert => {\n  const startsAt = new Date(alert.startsAt);\n  const endsAt = new Date(alert.endsAt);\n  const hour = endsAt.getUTCHours();\n  const isBusinessHours = hour >= 9 && hour < 17; // 9 AM–5 PM UTC\n  const durationMinutes = (endsAt - startsAt) / 1000 / 60; // Duration in minutes\n  return {\n    json: {\n      status: alert.status, // firing or resolved\n      alertname: alert.labels.alertname, // e.g., HighCPU\n      severity: alert.labels.severity, // e.g., critical\n      instance: alert.labels.instance, // e.g., 47.129.163.27:9100\n      service: alert.labels.service, // e.g., node\n      description: alert.annotations.description, // e.g., CPU usage description\n      startsAt: alert.startsAt, // e.g., 2025-05-25T06:40:29.682Z\n      endsAt: alert.endsAt, // e.g., 2025-05-25T06:42:59.682Z\n      fingerprint: alert.fingerprint, // e.g., 80e7d055dbb50b48\n      isBusinessHours: isBusinessHours, // true if within 9 AM–5 PM UTC\n      durationMinutes: durationMinutes // Duration in minutes\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        280
+      ],
+      "id": "196c7705-3060-4548-bcc2-8cedfb457869",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "guildId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1254730427805990942"
+        },
+        "channelId": {
+          "__rl": true,
+          "value": "1254730427805990945",
+          "mode": "list",
+          "cachedResultName": "general",
+          "cachedResultUrl": "https://discord.com/channels/1254730427805990942/1254730427805990945"
+        },
+        "content": "=🔥 **HighCPU** Alert\n\n🖥️ **Instance:** `{{ $node[\"Code - Format AI agent result\"].json[\"instance\"] }}`\n🔴 **Severity:** {{ $node[\"Code - Format AI agent result\"].json[\"threat_level\"] }}\n🚨 Active\n📝 **Details:** {{ $node[\"Code - Format AI agent result\"].json[\"notification_message\"] }}\n🔧 **Action:** Monitoring only - no intervention needed",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        780
+      ],
+      "id": "00d5d8e7-1f7e-417e-aa81-b36e995ec9c4",
+      "name": "Discord",
+      "webhookId": "6e1014b5-d89d-4939-a1f3-b74c280ae73b"
+    },
+    {
+      "parameters": {
+        "content": "# Analysis",
+        "height": 460,
+        "width": 567,
+        "color": 4
+      },
+      "id": "f50e3468-4ec1-44fd-a076-5fd490d4fe95",
+      "name": "Sticky Note23",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -140,
+        480
+      ],
+      "typeVersion": 1,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "# Monitoring and issues detection",
+        "height": 300,
+        "width": 567,
+        "color": 4
+      },
+      "id": "e370bb39-c7da-4465-a7ac-b99b456a44d9",
+      "name": "Sticky Note24",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -140,
+        160
+      ],
+      "typeVersion": 1,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert SysAdmin AI responsible for making critical decisions about system survival. Analyze the following Prometheus alert and decide whether this is an emergency requiring immediate self-healing action or just a performance issue requiring notification.\n\nAlert Details:\n- Alert Name: {{ $node[\"Code\"].json[\"alertname\"] }}\n- Severity: {{ $node[\"Code\"].json[\"severity\"] }}\n- Instance: {{ $node[\"Code\"].json[\"instance\"] }}\n- Service: {{ $node[\"Code\"].json[\"service\"] }}\n- Status: {{ $node[\"Code\"].json[\"status\"] }}\n- Description: {{ $node[\"Code\"].json[\"description\"] }}\n- Duration: {{ $node[\"Code\"].json.durationMinutes }} minutes\n- Business Hours: {{ $node[\"Code\"].json[\"isBusinessHours\"] }}\n\nDecision Criteria:\nEMERGENCY HEALING (take immediate action):\n- Disk usage > 65% (service failure imminent)\n- Memory usage > 65% (OOM kill risk)\n- Single process consuming > 30% CPU for > 3 minutes (runaway process)\n- Load average > 20 (system unresponsive)\n- Critical services down (nginx, database, etc.)\n- Any condition that threatens service availability within next 30 minutes\n\nNOTIFY ONLY (inform team but don't act):\n- Performance degradation but services still functional\n- Resource usage elevated but not critical\n- Temporary spikes that may self-resolve\n- Issues during business hours unless critical\n\nYour Decision Rules:\n1. If system survival is at risk → EMERGENCY_HEALING\n2. If performance is degraded but stable → NOTIFY_ONLY\n3. When in doubt about service survival → EMERGENCY_HEALING\n4. Consider business hours only for non-critical issues\n\nRespond with this exact JSON format:\n{\n  \"decision\": \"EMERGENCY_HEALING|NOTIFY_ONLY\",\n  \"threat_level\": \"CRITICAL|HIGH|MEDIUM|LOW\",\n  \"instance\": \"The instance (IP address)\",\n  \"analysis\": \"Brief analysis of what's happening and why it's critical/non-critical\",\n  \"immediate_actions\": [\n    {\n      \"command\": \"exact command to execute immediately\",\n      \"purpose\": \"what this command does to ensure survival\",\n      \"safety_level\": \"SAFE|CAUTION|RISKY\"\n    }\n  ],\n  \"survival_timeline\": \"How long until potential service failure (e.g., '30 minutes', 'immediate', 'stable')\",\n  \"notification_message\": \"Message to send to Discord explaining the situation and actions taken/recommended\",\n  \"reasoning\": \"Why this decision ensures system survival or why notification is sufficient\"\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -60,
+        660
+      ],
+      "id": "5f2bef63-f1cc-4515-bf16-7845e25ade56",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -100,
+        860
+      ],
+      "id": "077e2604-fa37-4e7f-909b-9d99bbd8a0ef",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "IeL4tPJVtxW3SUMs",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Post-mortem and notify",
+        "height": 520,
+        "width": 227,
+        "color": 6
+      },
+      "id": "47562082-9a30-48b3-9d27-5783016f52e1",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1460,
+        160
+      ],
+      "typeVersion": 1,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const aiOutput = items[0].json;\n\nif (!aiOutput.output) {\n  throw new Error(\"Missing output field in AI Agent response\");\n}\n\nlet parsedOutput;\ntry {\n  // Extract JSON from markdown code blocks\n  let jsonString = aiOutput.output.trim();\n  \n  // Remove markdown code block markers if present\n  if (jsonString.startsWith('```json')) {\n    jsonString = jsonString.replace(/^```json\\n?/, '');\n  }\n  if (jsonString.startsWith('```')) {\n    jsonString = jsonString.replace(/^```\\n?/, '');\n  }\n  if (jsonString.endsWith('```')) {\n    jsonString = jsonString.replace(/\\n?```$/, '');\n  }\n  \n  // Clean up the JSON string - remove extra newlines and spaces\n  jsonString = jsonString.replace(/\\n\\s*/g, '').trim();\n  \n  // Parse the cleaned JSON\n  parsedOutput = JSON.parse(jsonString);\n  \n} catch (error) {\n  console.error(\"Raw AI output:\", aiOutput.output);\n  console.error(\"Parsing error:\", error.message);\n  throw new Error(`Failed to parse AI Agent output: ${error.message}`);\n}\n\n// Validate required fields for the new format\nconst requiredFields = ['decision', 'threat_level', 'analysis', 'survival_timeline', 'notification_message', 'reasoning'];\nconst missingFields = requiredFields.filter(field => !(field in parsedOutput));\n\nif (missingFields.length > 0) {\n  throw new Error(`Missing required fields in AI output: ${missingFields.join(', ')}`);\n}\n\n// Validate field types\nif (!['EMERGENCY_HEALING', 'NOTIFY_ONLY'].includes(parsedOutput.decision)) {\n  throw new Error(`Invalid decision value: ${parsedOutput.decision}. Must be EMERGENCY_HEALING or NOTIFY_ONLY`);\n}\n\nif (!['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(parsedOutput.threat_level)) {\n  throw new Error(`Invalid threat_level value: ${parsedOutput.threat_level}. Must be LOW, MEDIUM, HIGH, or CRITICAL`);\n}\n\nif (typeof parsedOutput.analysis !== 'string' || parsedOutput.analysis.trim() === '') {\n  throw new Error('Analysis must be a non-empty string');\n}\n\n// Ensure immediate_actions is an array\nif (!Array.isArray(parsedOutput.immediate_actions)) {\n  parsedOutput.immediate_actions = [];\n}\n\n// Return formatted JSON with all fields\nreturn [\n  {\n    json: {\n      decision: parsedOutput.decision,\n      threat_level: parsedOutput.threat_level,\n      instance: parsedOutput.instance,\n      analysis: parsedOutput.analysis,\n      immediate_actions: parsedOutput.immediate_actions,\n      survival_timeline: parsedOutput.survival_timeline,\n      notification_message: parsedOutput.notification_message,\n      reasoning: parsedOutput.reasoning,\n      \n      // Add computed fields for convenience\n      is_emergency: parsedOutput.decision === 'EMERGENCY_HEALING',\n      is_critical: ['HIGH', 'CRITICAL'].includes(parsedOutput.threat_level),\n      requires_action: parsedOutput.immediate_actions.length > 0,\n      \n      // Metadata\n      parsed_at: new Date().toISOString(),\n      ai_output_raw: aiOutput.output // Keep original for debugging\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        300,
+        660
+      ],
+      "id": "e78201ef-7cda-4f5c-b19f-33724c4b0b8c",
+      "name": "Code - Format AI agent result"
+    },
+    {
+      "parameters": {
+        "content": "# Self-healing fix",
+        "height": 520,
+        "width": 787,
+        "color": 3
+      },
+      "id": "36ed7fdc-30bf-457e-bd64-fb997b5ccf80",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        660,
+        160
+      ],
+      "typeVersion": 1,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "# AI-Agent Decision Engine for Self-Healing Server/VPS",
+        "height": 80,
+        "width": 1827
+      },
+      "id": "41734c9b-5f81-494e-8e8f-a1e42015ee02",
+      "name": "Sticky Note25",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -140,
+        60
+      ],
+      "typeVersion": 1,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "# \n# Just inform the alerts",
+        "height": 240,
+        "width": 787,
+        "color": 3
+      },
+      "id": "a6eb776a-cce3-4311-90c3-a6ab1ada5955",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        660,
+        700
+      ],
+      "typeVersion": 1,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "051f5fa6-4bca-4a13-bd87-343f03c05439",
+              "leftValue": "={{ $json.threat_level }}",
+              "rightValue": "CRITICAL",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        500,
+        420
+      ],
+      "id": "bda98efc-6a43-4ef1-b7da-3c70e1d32200",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "bash /opt/sysadmin-toolkit/scripts/system-health/system-doctor.sh --report-json --check-only"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        700,
+        240
+      ],
+      "id": "b5e08619-a099-482f-966b-7389b86ba18f",
+      "name": "SSH - Analyze system"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        900,
+        380
+      ],
+      "id": "306e0a55-06c8-4ab7-af40-34fb5c2e1ddb",
+      "name": "OpenAI Chat Model1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert DevOps AI responsible for intelligent incident analysis and targeted healing decisions. Compare the original alert with current system state, then provide precise, targeted actions based on actual conditions.\n\nORIGINAL ALERT CONTEXT:\n- Alert: {{ $node[\"Code\"].json.alertname }}\n- Instance: {{ $node[\"Code\"].json.instance }}\n- Severity: {{ $node[\"Code\"].json.severity }}\n- Description: {{ $node[\"Code\"].json.description }}\n- Duration: {{ $node[\"Code\"].json.durationMinutes }} minutes\n- Status: {{ $node[\"Code\"].json.status }}\n\nCURRENT SYSTEM ANALYSIS:\nExit Code: {{ $node[\"SSH - Analyze system\"].json.code }}\nSystem Doctor Output:\n{{ $node[\"SSH - Analyze system\"].json.stdout }}\n\nSystem Errors:\n{{ $node[\"SSH - Analyze system\"].json.stderr }}\n\nPRODUCTION SERVICES CONTEXT:\n{\n  \"critical_services\": [\"nginx\", \"mysql\", \"redis\", \"pm2\", \"nodejs-app\"],\n  \"pm2_applications\": {\n    \"api-server\": {\"instances\": 2, \"max_memory\": \"512M\", \"restart_limit\": 3},\n    \"worker-queue\": {\"instances\": 1, \"max_memory\": \"256M\", \"restart_limit\": 2},\n    \"web-frontend\": {\"instances\": 2, \"max_memory\": \"1G\", \"restart_limit\": 3}\n  },\n  \"restart_policies\": {\n    \"nginx\": {\"method\": \"reload\", \"safe_restart\": true},\n    \"mysql\": {\"method\": \"restart\", \"requires_backup_check\": true},\n    \"pm2-apps\": {\"method\": \"restart\", \"health_check_required\": true, \"graceful_timeout\": 10},\n    \"stress-ng\": {\"method\": \"kill\", \"safe_to_terminate\": true}\n  },\n  \"cleanup_policies\": {\n    \"temp_file_threshold_mb\": 500,\n    \"log_rotation_threshold_mb\": 1000,\n    \"pm2_log_cleanup\": true,\n    \"node_modules_cache\": \"/tmp/.npm\",\n    \"safe_temp_patterns\": [\"/tmp/*.tmp\", \"/tmp/*.log\", \"/tmp/*.bin\"],\n    \"protected_files\": [\"/tmp/mysql.sock\", \"/tmp/.X11-unix\"]\n  }\n}\n\nANALYSIS INSTRUCTIONS:\n1. **Parse System Doctor Output**: Extract key metrics and issues from the text output\n2. **PM2 Process Analysis**: Look for PM2-related processes in CPU/memory analysis\n3. **Node.js App Health**: Assess if Node.js applications are contributing to resource issues\n4. **Targeted Action Planning**: Create specific commands to address identified problems\n5. **Risk Assessment**: Evaluate safety of each proposed action\n\nDECISION LOGIC FOR PM2 APPS:\n- If CPU > 90% AND PM2 process consuming high CPU → MODERATE: Restart specific PM2 app\n- If Memory > 85% AND PM2 process memory leak → MODERATE: Restart PM2 app with memory limit\n- If PM2 app status \"errored\" or \"stopped\" → SAFE: pm2 restart <app-name>\n- If PM2 logs showing errors → SAFE: pm2 flush (clear logs)\n- If Node.js process unresponsive → MODERATE: pm2 reload <app-name> (zero-downtime)\n- If multiple PM2 restarts detected → RISKY: pm2 stop all && pm2 start all\n\nCRITICAL SCENARIOS FOR PM2:\n1. **High CPU from Node.js**: pm2 restart <app-name> or pm2 reload <app-name>\n2. **Memory Leak**: pm2 restart <app-name> with memory monitoring\n3. **App Crashed**: pm2 resurrect or pm2 start <app-name>\n4. **Log Files Full**: pm2 flush && pm2 install pm2-logrotate\n5. **Multiple App Failures**: pm2 restart all (escalated action)\n\nACTION PRIORITIZATION:\n1. **SAFE**: PM2 status check, log flushing, individual app restart, temp cleanup\n2. **MODERATE**: PM2 app reload (zero-downtime), memory limit enforcement\n3. **RISKY**: PM2 restart all, system-wide PM2 restart, Node.js process kill\n\nRespond with this exact JSON format:\n{\n  \"situation_assessment\": {\n    \"alert_vs_reality\": \"Current system state compared to original alert\",\n    \"issue_status\": \"RESOLVED|ONGOING|ESCALATED|CRITICAL\",\n    \"action_required\": \"NONE|PREVENTIVE|CORRECTIVE|EMERGENCY\",\n    \"confidence_level\": \"HIGH|MEDIUM|LOW\",\n    \"system_exit_code\": \"exit code from system analysis\",\n    \"key_findings\": [\"list\", \"of\", \"critical\", \"findings\", \"including\", \"pm2\", \"app\", \"status\"],\n    \"pm2_assessment\": \"specific analysis of PM2 applications health\"\n  },\n  \"targeted_actions\": [\n    {\n      \"action\": \"specific action based on system doctor findings\",\n      \"command\": \"exact command to execute (PM2 commands preferred for Node.js issues)\",\n      \"target\": \"specific PM2 app/service/process identified in system doctor output\",\n      \"justification\": \"why this specific action is needed based on system doctor data\",\n      \"risk_level\": \"SAFE|MODERATE|RISKY\",\n      \"expected_outcome\": \"specific result expected\",\n      \"execution_order\": 1\n    }\n  ],\n  \"preventive_recommendations\": [\n    {\n      \"type\": \"pm2_optimization|cleanup_type based on system doctor warnings\",\n      \"target\": \"specific PM2 app or system component\",\n      \"size_impact\": \"space/resource to be freed or performance improvement\",\n      \"urgency\": \"LOW|MEDIUM|HIGH\"\n    }\n  ],\n  \"service_actions\": [\n    {\n      \"service\": \"pm2_app_name or service_name if any issues detected\",\n      \"action\": \"restart|reload|stop|start|flush\",\n      \"reason\": \"based on system doctor findings and PM2 health assessment\"\n    }\n  ],\n  \"monitoring_focus\": {\n    \"metrics_to_watch\": [\"PM2 app status\", \"Node.js memory usage\", \"specific metrics from system doctor\"],\n    \"alert_correlation\": \"relationship between alert and PM2 application performance\",\n    \"prevention_measures\": [\"PM2 monitoring setup\", \"memory limits\", \"log rotation\"]\n  },\n  \"discord_report\": {\n    \"status_summary\": \"Brief status: alert status + PM2 findings + actions taken\",\n    \"technical_details\": \"What system doctor found about PM2 apps and what actions were performed\",\n    \"team_actions\": [\"PM2-specific manual steps needed\"],\n    \"severity_level\": \"LOW|MEDIUM|HIGH|CRITICAL based on PM2 app health and system doctor findings\"\n  }\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        960,
+        240
+      ],
+      "id": "3561d54f-0ac4-4909-b83e-f423cbdef8d1",
+      "name": "Agent - Recommend fix"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fixed Dynamic SSH Command Executor - Handles AI markdown output\nconst inputData = $input.first().json;\nconst alertData = $node[\"Code\"].json;\n\n// Parse AI response from markdown format\nlet aiResponse;\ntry {\n  // Check if we have raw AI output or parsed JSON\n  if (inputData.output) {\n    // Raw AI output with markdown - extract JSON\n    let jsonString = inputData.output.trim();\n    \n    // Remove markdown code block markers\n    if (jsonString.startsWith('```json')) {\n      jsonString = jsonString.replace(/^```json\\n?/, '');\n    }\n    if (jsonString.startsWith('```')) {\n      jsonString = jsonString.replace(/^```\\n?/, '');\n    }\n    if (jsonString.endsWith('```')) {\n      jsonString = jsonString.replace(/\\n?```$/, '');\n    }\n    \n    // Clean and parse JSON\n    jsonString = jsonString.replace(/\\n\\s*/g, '').trim();\n    aiResponse = JSON.parse(jsonString);\n    \n  } else {\n    // Already parsed JSON\n    aiResponse = inputData;\n  }\n} catch (error) {\n  console.error(\"Failed to parse AI response:\", error.message);\n  console.error(\"Raw input:\", JSON.stringify(inputData, null, 2));\n  \n  return [{\n    json: {\n      execution_status: 'PARSE_ERROR',\n      error: `Failed to parse AI response: ${error.message}`,\n      raw_input: inputData,\n      discord_message: '❌ Error parsing AI recommendations. Manual intervention required.'\n    }\n  }];\n}\n\n// Extract instance IP from alert data\nconst instanceIP = alertData.instance.split(':')[0];\n\n// SSH Credential mapping\nconst credentialMap = {\n  '47.129.163.27': 'SSH Cred - content-demo-server-2',\n  // Add more servers as needed\n};\n\nconst sshCredential = credentialMap[instanceIP];\nif (!sshCredential) {\n  return [{\n    json: {\n      execution_status: 'NO_CREDENTIAL',\n      message: `No SSH credential configured for ${instanceIP}`,\n      available_credentials: Object.keys(credentialMap),\n      discord_message: `❌ No SSH access configured for server ${instanceIP}. Manual intervention required.`\n    }\n  }];\n}\n\n// Safety validation function\nfunction validateCommand(command, riskLevel) {\n  const dangerousPatterns = [\n    'rm -rf /',\n    'dd if=',\n    'mkfs',\n    'fdisk',\n    'shutdown',\n    'reboot',\n    'halt',\n    'chmod 777 /',\n    '> /etc/',\n    'format',\n    'wipefs'\n  ];\n  \n  const isDangerous = dangerousPatterns.some(pattern => \n    command.toLowerCase().includes(pattern.toLowerCase())\n  );\n  \n  if (isDangerous) {\n    return { safe: false, reason: `Blocked dangerous pattern in command: ${command}` };\n  }\n  \n  // For this implementation, block RISKY commands\n  if (riskLevel === 'RISKY') {\n    return { safe: false, reason: `RISKY commands require manual approval: ${command}` };\n  }\n  \n  return { safe: true, reason: 'Command passed safety checks' };\n}\n\n// Process targeted actions from AI response\nconst actionsToExecute = [];\nconst blockedActions = [];\n\nconsole.log(\"Processing AI response:\", JSON.stringify(aiResponse, null, 2));\n\nif (aiResponse.targeted_actions && Array.isArray(aiResponse.targeted_actions)) {\n  console.log(`Found ${aiResponse.targeted_actions.length} targeted actions`);\n  \n  const sortedActions = aiResponse.targeted_actions.sort((a, b) => \n    (a.execution_order || 999) - (b.execution_order || 999)\n  );\n  \n  for (const action of sortedActions) {\n    console.log(`Validating action: ${action.action} (Risk: ${action.risk_level})`);\n    \n    const validation = validateCommand(action.command, action.risk_level);\n    \n    if (validation.safe) {\n      actionsToExecute.push({\n        description: action.action,\n        command: action.command,\n        target: action.target,\n        risk_level: action.risk_level,\n        expected_outcome: action.expected_outcome,\n        execution_order: action.execution_order || 999,\n        justification: action.justification\n      });\n      console.log(`✅ Action approved: ${action.action}`);\n    } else {\n      blockedActions.push({\n        ...action,\n        block_reason: validation.reason\n      });\n      console.log(`❌ Action blocked: ${action.action} - ${validation.reason}`);\n    }\n  }\n} else {\n  console.log(\"No targeted_actions found in AI response\");\n}\n\nconsole.log(`Summary: ${actionsToExecute.length} actions to execute, ${blockedActions.length} blocked`);\n\n// Create execution payload for SSH node\nconst executionNodes = actionsToExecute.map((action, index) => ({\n  json: {\n    // SSH configuration for n8n SSH node\n    ssh_host: instanceIP,\n    ssh_credential: sshCredential,\n    ssh_command: action.command,\n    \n    // Action metadata\n    action_description: action.description,\n    target: action.target,\n    risk_level: action.risk_level,\n    expected_outcome: action.expected_outcome,\n    execution_order: action.execution_order,\n    justification: action.justification,\n    \n    // Execution tracking\n    execution_index: index + 1,\n    total_actions: actionsToExecute.length,\n    \n    // Original context\n    instance: alertData.instance,\n    alert_name: alertData.alertname,\n    ai_assessment: aiResponse.situation_assessment,\n    \n    // For Discord reporting\n    execution_summary: `Executing ${actionsToExecute.length} targeted actions on ${instanceIP}, ${blockedActions.length} blocked for safety`\n  }\n}));\n\n// If no actions to execute, return summary with details\nif (executionNodes.length === 0) {\n  return [{\n    json: {\n      execution_status: 'NO_SAFE_ACTIONS',\n      message: 'No safe actions to execute based on AI recommendations',\n      actions_analyzed: aiResponse.targeted_actions?.length || 0,\n      blocked_actions: blockedActions,\n      ai_assessment: aiResponse.situation_assessment,\n      server: instanceIP,\n      discord_message: `⚠️ System analysis complete for ${instanceIP}. ${blockedActions.length} actions blocked for safety (${blockedActions.map(a => a.action).join(', ')}). Manual intervention recommended.`\n    }\n  }];\n}\n\nconsole.log(`Prepared ${executionNodes.length} SSH commands for execution on ${instanceIP}`);\nreturn executionNodes;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        480
+      ],
+      "id": "b9a737a2-5da5-4f0b-b756-52ffb21e393c",
+      "name": "Dynamic SSH Command Executor"
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "={{ $json.ssh_command }}",
+        "cwd": "/tmp"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        1260,
+        480
+      ],
+      "id": "2ad5f007-edf2-40ca-8d57-353a07d2ec80",
+      "name": "SSH - Execute Targeted Action"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "guildId": {
+          "__rl": true,
+          "mode": "id",
+          "value": ""
+        },
+        "channelId": {
+          "__rl": true,
+          "value": "1254730427805990945",
+          "mode": "list",
+          "cachedResultName": "general",
+          "cachedResultUrl": "https://discord.com/channels/1254730427805990942/1254730427805990945"
+        },
+        "content": "=🔥 **HighCPU** Alert\n\n🖥️ **Instance:** {{ $node[\"Code - Format AI agent result\"].json[\"instance\"] }}\n🔴 **Severity:** {{ $node[\"Code - Format AI agent result\"].json[\"threat_level\"] }}\n🚨 Active\n📝 **Details:** {{ $node[\"Code - Format AI agent result\"].json[\"notification_message\"] }}\n🔧 **Action:** Monitoring only - no intervention needed",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        1480,
+        480
+      ],
+      "id": "1e7a8dca-1026-4d2f-a9f1-ff0e2daa74b1",
+      "name": "Discord2",
+      "webhookId": "6e1014b5-d89d-4939-a1f3-b74c280ae73b"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code - Format AI agent result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Format AI agent result": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "SSH - Analyze system",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SSH - Analyze system": {
+      "main": [
+        [
+          {
+            "node": "Agent - Recommend fix",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agent - Recommend fix",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent - Recommend fix": {
+      "main": [
+        [
+          {
+            "node": "Dynamic SSH Command Executor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dynamic SSH Command Executor": {
+      "main": [
+        [
+          {
+            "node": "SSH - Execute Targeted Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SSH - Execute Targeted Action": {
+      "main": [
+        [
+          {
+            "node": "Discord2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5f898e2a-faa3-4d16-8b24-8250157e38a8",
+  "meta": {
+    "instanceId": "f21646e9824644bcc28ab48f4fbefcc86cd9556879c6164b59093857dd69987a"
+  },
+  "id": "MeMFfHiCgutxroVn",
+  "tags": []
+}

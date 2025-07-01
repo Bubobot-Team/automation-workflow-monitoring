@@ -8,14 +8,33 @@ Created and maintained by Bubobot Team. Visit us at [https://bubobot.com/](https
 
 ## Available Workflows
 
-- Incident Response - [n8n - Incident Response - 1](./n8n/n8n___Incident_Response___1.json)
-  - A workflow that handles incident management by integrating AlertManager with PagerDuty, Notion, and Discord notifications
-  - Features:
-    - Automatic incident creation in PagerDuty
-    - Notion database updates for incident tracking
-    - Discord notifications for team awareness
-    - Business hours detection for appropriate routing
-    - Automatic service restart capabilities by using Lambda function
+### Incident Response Workflow
+**File:** [n8n - Incident Response - 1](n8n/n8n___Incident_Response___1.json)
+
+A comprehensive workflow that handles incident management by integrating AlertManager with PagerDuty, Notion, and Discord notifications.
+
+**Workflow Flow:**
+![Incident Response Workflow](./assets/n8n_Incident_Response_Workflow.png)
+
+**Features:**
+- Automatic incident creation in PagerDuty
+- Notion database updates for incident tracking
+- Discord notifications for team awareness
+- Business hours detection for appropriate routing
+- Automatic service restart capabilities by using Lambda function
+
+### AI Agent Decision Engine for Self-Healing Server VPS
+**File:** [n8n - AI Agent Decision Engine](./n8n/n8n_AI_Agent_Decision_Engine_for_Self_Healing_Server_VPS.json)
+
+An intelligent automation workflow that uses AI agents to make decisions for self-healing server infrastructure.
+
+**Workflow Flow:**
+![# AI-Agent Decision Engine for Self-Healing Server/VPS](./assets/n8n_AI_Agent_Decision_Engine_for_Self_Healing_Server_VPS.png)
+
+**Features:**
+- AI-powered decision making for infrastructure issues
+- Automated self-healing capabilities for VPS servers
+- Proactive issue detection and resolution
 
 ## Support
 
